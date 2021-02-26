@@ -10,7 +10,7 @@ interface Option {
   name: string;
   price: number;
 }
-interface OptionGroup {
+export interface OptionGroup {
   name: string;
   max_select: number;
   options: Option[];

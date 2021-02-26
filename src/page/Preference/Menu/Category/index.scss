@@ -42,6 +42,19 @@
         width: 120px;
         margin: 0 0;
       }
+      .UsualState{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        button{
+          background-color: white;
+          border-radius: 1vh;
+          margin:1vh;
+          height: 5vh;
+          width:20vh;
+        }
+      }
+
     }
   }
 }

@@ -11,6 +11,10 @@ import { Header, Loading } from 'component';
 import PreferenceRouter from 'page/Preference';
 import HomeRouter from 'page/Home';
 import AuthRouter from 'page/Auth';
+interface props {
+  onChange: () => any;
+}
+
 
 const RootRouter = () => {
   useAuthStateObserver();

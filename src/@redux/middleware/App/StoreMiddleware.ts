@@ -18,6 +18,143 @@ export const StoreMiddleware = ({ dispatch, getState }: param) => (
 ) => (action: Action) => {
     next(action);
     const category = getState().Store.menu.categories;
+    const categoryLength= category.length;
+    const option=getState().Store.menu.optionGroups;
+    const optionGroupsLength=getState().Store.menu.optionGroups.length;
+    if(StoreAction.Types.ADD_OPTIONGROUP_FIREBASE===action.type){
+        dbService
+            .collection('stores')
+            .where('ownerId', '==', getState().Auth.uid)
+            .get()
+            .then((querySnapshot) =>
+                querySnapshot.forEach((store) => {
+                    console.log('[StoreMiddleware] found a store');
+                    store.ref
+                        .update({
+                            'menu.optionGroups': firebase.firestore.FieldValue.arrayUnion({
+                                name: action.payload.name,
+                                maxSelect:action.payload.max_Select,
+                                options:action.payload.options
+                            }),
+                        })
+                        .then(() => {
+                            dispatch(StoreAction.loadStoreFirebase());
+                        })
+                        .catch((e) => {
+                            console.log(e.message);
+                        });
+                })
+            )
+            .catch((e) => console.log(e.message));
+    }
+
+    if(StoreAction.Types.DELETE_OPTION_FIREBASE===action.type){
+        const groupName=action.payload.name;
+        const optionName=action.payload.optionName;
+
+        let arr:any=[];
+        let modifOptions:any = {
+            name:'',
+            maxSelect:0,
+            options:[]
+        }
+        for(let i=0; i<optionGroupsLength;i++){
+            console.log(groupName)
+            if(getState().Store.menu.optionGroups[i].name===groupName){
+                modifOptions.maxSelect=0;
+                modifOptions.name=groupName;
+                for(let j=0; j<getState().Store.menu.optionGroups[i].options.length;j++){
+                    if(getState().Store.menu.optionGroups[i].options[j].name!=optionName){
+                        modifOptions.options.push(getState().Store.menu.optionGroups[i].options[j]);
+                    }
+                }
+                arr.push(modifOptions);
+            }else{
+                arr.push(getState().Store.menu.optionGroups[i])
+            }
+        }
+
+        const categories = getState().Store.menu.categories;
+        const items = getState().Store.menu.items;
+        dbService
+            .collection('stores')
+            .where('ownerId', '==', getState().Auth.uid)
+            .get()
+            .then((querySnapshot) =>
+                querySnapshot.forEach((store) => {
+                    console.log('[StoreMiddleware] found a store~');
+                    store.ref
+                        .update({
+                            'menu': {
+                                'categories':[
+                                    ...categories
+                                ],
+                                'items':[
+                                    ...items
+                                ],
+                                'optionGroups': [
+                                    ...arr
+                                ]
+                            }
+                        })
+                        .then(() => {
+                            dispatch(StoreAction.loadStoreFirebase());
+                        })
+                        .catch((e) => {
+                            console.log(e.message);
+                        });
+                })
+            )
+            .catch((e) => console.log(e.message));
+
+    }
+
+    if(StoreAction.Types.DELETE_OPTIONGROUP_FIREBASE===action.type){
+        const groupName=action.payload.name;
+
+        let arr:any=[];
+        for(let i=0; i<optionGroupsLength;i++){
+            if(getState().Store.menu.optionGroups[i].name!=groupName) {
+                arr.push(getState().Store.menu.optionGroups[i]);
+            }
+        }
+
+
+        const categories = getState().Store.menu.categories;
+        const items = getState().Store.menu.items;
+        console.log(arr)
+        dbService
+            .collection('stores')
+            .where('ownerId', '==', getState().Auth.uid)
+            .get()
+            .then((querySnapshot) =>
+                querySnapshot.forEach((store) => {
+                    console.log('[StoreMiddleware] found a store!!');
+                    store.ref
+                        .update({
+                            'menu': {
+                                'categories':[
+                                    ...categories
+                                ],
+                                'items':[
+                                    ...items
+                                ],
+                                'optionGroups': [
+                                    ...arr
+                                ]
+                            }
+                        })
+                        .then(() => {
+                            dispatch(StoreAction.loadStoreFirebase());
+                        })
+                        .catch((e) => {
+                            console.log(e.message);
+                        });
+                })
+            )
+            .catch((e) => console.log(e.message));
+
+    }
 
     if (StoreAction.Types.FETCH_STORE_INFO === action.type) {
     }
@@ -25,26 +162,69 @@ export const StoreMiddleware = ({ dispatch, getState }: param) => (
     if (StoreAction.Types.MODIFY_CATEGORY_FIREBASE === action.type) {
         const name=action.payload.name;
         const description=action.payload.description;
-        const count =action.payload.index-1;
+        const id=action.payload.id;
         const Obj ={
             name:name,
-            id:count,
+            id:id,
             description:description
         }
-        const modifCategory=category.map((store:Category)=>(store.name===name && store.description===description)? store:Obj);
-        console.log(modifCategory);
-        const categoryDocs=dbService.collection('stores').doc(`V10WuwulJcyZx08OhxKF`)
-        categoryDocs.update({
-            'menu': {
-                'categories': [
-                    ...modifCategory
-                ]
+        const modifCategory:any=[];
+        for(let i=0; i<categoryLength;i++){
+            if(i===id){
+                modifCategory.push(Obj);
+            }else{
+                modifCategory.push(getState().Store.menu.categories[i])
             }
-        }).then(() => {
-            dispatch(StoreAction.loadStoreFirebase());
-        }).catch((e) => {
-                console.log(e.message);
-        });
+        }
+        //const modifCategory=category.map((store:Category)=>(store.id===id && store.name===name && store.description===description)? Obj:store);
+        console.log(modifCategory);
+        dbService.collection('stores').where('ownerId', '==', getState().Auth.uid)
+            .get().then((querySnapshot) =>
+            querySnapshot.forEach((store) => {
+                console.log('[StoreMiddleware] found a store');
+                store.ref
+                    .update({
+                        'menu': {
+                            'categories': [
+                                ...modifCategory
+                            ]
+                        }
+                    }).then(() => {
+                    dispatch(StoreAction.loadStoreFirebase());
+                }).catch((e) => {
+                    console.log(e.message);
+                });
+            })
+        )
+            .catch((e) => console.log(e.message));
+
+
+    }
+    if (StoreAction.Types.DELETE_CATEGORY_FIREBASE === action.type) {
+        const id=action.payload.id;
+        const modifCategory=getState().Store.menu.categories;
+        modifCategory.splice(id,1);
+        console.log('delete')
+        //const modifCategory=category.map((store:Category)=>(store.id===id && store.name===name && store.description===description)? Obj:store);
+        dbService.collection('stores').where('ownerId', '==', getState().Auth.uid)
+            .get().then((querySnapshot) =>
+            querySnapshot.forEach((store) => {
+                console.log('[StoreMiddleware] found a store');
+                store.ref
+                    .update({
+                        'menu': {
+                            'categories': [
+                                ...modifCategory
+                            ]
+                        }
+                    }).then(() => {
+                    dispatch(StoreAction.loadStoreFirebase());
+                }).catch((e) => {
+                    console.log(e.message);
+                });
+            })
+        )
+            .catch((e) => console.log(e.message));
 
 
     }

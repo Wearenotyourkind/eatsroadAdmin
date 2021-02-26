@@ -14,51 +14,67 @@ interface CategoryProps {
   index:number;
 }
 const Categories: React.FC<props> = (props) => {
-    const dispatch = useDispatch();
-    const [modifyState, setModifyState]=useState(false);
-    const [propsName, setPropsName]=useState('');
-    const [propsDescription, setPropsDescription]=useState('');
-    const [propsIndex, setPropsIndex]=useState(0);
-
-    const handleOnClickModifyCategory = () => {
-        dispatch(
-            StoreAction.modifyCategoryFireBase(propsName, propsDescription,setPropsIndex)
-        );
-        setPropsName('');
-        setPropsDescription('');
-    };
-    const handleOnClickDeleteCategory = () => {
-        dispatch(
-            StoreAction.deleteCategoryFireBase(propsName, propsDescription)
-        );
-        setPropsName('');
-        setPropsDescription('');
-    };
-
 
     const Category = (props: CategoryProps) => {
+        const [modifyState, setModifyState]=useState(false);
+        const [propsName, setPropsName]=useState('');
+        const [propsDescription, setPropsDescription]=useState('');
+        const [propsIndex, setPropsIndex]=useState(props.index);
+        const dispatch = useDispatch();
+
+        const handleOnClickModifyCategory = () => {
+            dispatch(
+                StoreAction.modifyCategoryFireBase(propsName, propsDescription,propsIndex)
+            );
+            setPropsName('');
+            setPropsDescription('');
+        };
+        const handleOnClickDeleteCategory = () => {
+            dispatch(
+                StoreAction.deleteCategoryFireBase(propsName, propsDescription,propsIndex)
+            );
+            setPropsName('');
+            setPropsDescription('');
+        };
+
         return (
             <div className="CategoryTile">
                 {
-                    modifyState?
+                    (modifyState && props.index === propsIndex)?
                         <div className="modifyState">
-                            <input value={propsName} placeholder={props.name} onChange={e=>setPropsName(e.target.value)}/>
-                            <input value={props.description} placeholder={props.description}/>
+                            <input
+                                type="text"
+                                placeholder="카테고리명"
+                                onChange={(e)=>{setPropsName(e.target.value)}}
+                                value={propsName}
+                            />
+                            <input
+                                type="text"
+                                placeholder="설명"
+                                onChange={(e)=>{setPropsDescription(e.target.value)}}
+                                value={propsDescription}
+                            />
                             <button onClick={()=>{
-
                                 handleOnClickModifyCategory();
                                 setModifyState(false);
                             }}>수정 완료</button>
+                            <button onClick={()=>{setModifyState(false);}}>취소</button>
                         </div>:
                         <div className="UsualState">
-                            <h3>{props.name}</h3>
-                            <p>{props.description}</p>
-                            <button onClick={()=>{
-                                setPropsName(props.name);
-                                setPropsDescription(props.description);
-                                setModifyState(true);
-                            }}>수정하기</button>
-                            <button onClick={()=>handleOnClickDeleteCategory}>삭제하기</button>
+                            <div>
+                                <h3>{props.name}</h3>
+                                <p>{props.description}</p>
+                            </div>
+                            <div>
+                                <button onClick={()=>{
+                                    setModifyState(true);
+                                    setPropsIndex(props.index);
+                                }}>수정하기</button>
+                                <button onClick={()=>{
+                                    setPropsIndex(props.index);
+                                    handleOnClickDeleteCategory();
+                                }}>삭제하기</button>
+                            </div>
                         </div>
 
                 }
