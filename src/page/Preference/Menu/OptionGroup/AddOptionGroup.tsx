@@ -24,7 +24,9 @@ const AddOptionGroup: React.FC<props> = (props) => {
                 <div>
                     <OptionGroupEditor onChange={() => {}} />
                 </div>
-                <div></div>
+                <div>
+                    <button onClick={()=>setIsModalOpen(false)}>닫기</button>
+                </div>
             </Modal>
         </>
     );
